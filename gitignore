@@ -1,0 +1,27 @@
+# Raw parquet from EvE Bio - not ours to redistribute
+# Users re-download from huggingface.co/datasets/eve-bio/drug-target-activity
+data/raw/
+
+# Python cache and venv
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env/
+venv/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# Logs and local notes
+*.log
+notes/local/
+scratch/
+
+# Local server artifacts
+.python-server.log

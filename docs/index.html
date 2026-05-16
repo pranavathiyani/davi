@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAVI - Drug-target Activity Viewer</title>
+  <meta name="description" content="Interactive browser for the EvE Bio quantitative drug-target activity dataset.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%232a5d8a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>DAVI</h1>
+      <span class="tagline">Drug-target Activity Viewer</span>
+    </div>
+    <div class="meta" id="build-meta">
+      <span class="loading">loading...</span>
+    </div>
+    <nav class="links">
+      <a href="#" id="help-link">Help</a>
+      <a href="https://huggingface.co/datasets/eve-bio/drug-target-activity" target="_blank" rel="noopener">EvE Bio data</a>
+      <a href="https://github.com/pranavathiyani/davi" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="intro">
+    <p>
+      DAVI is an interactive browser for the <strong>EvE Bio drug-target-activity</strong> dataset:
+      a quantitative screen of 1,397 mostly-FDA-approved drugs against nuclear receptors, GPCRs, and
+      protein kinases. Each network shows what a compound hits, or what hits a target, with edge
+      thickness scaled by potency (pXC50) and dashed orange edges flagging cytotoxicity concerns.
+      Search a drug or gene, or pick from the suggestions below.
+    </p>
+  </section>
+
+  <section class="search-zone">
+    <div class="search-row">
+      <div class="search-wrap">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search compounds or targets - e.g. Ponatinib, ADRB1, P00533"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div id="search-results" class="search-results" hidden></div>
+      </div>
+      <div class="suggestions">
+        <span class="suggest-label">Try:</span>
+        <button class="chip" data-pick="compound:EB001170">Ponatinib</button>
+        <button class="chip" data-pick="target:gene:ADRB1">ADRB1</button>
+        <button class="chip" data-pick="compound:EB000634">Midostaurin</button>
+        <button class="chip" data-pick="target:gene:HTR6">HTR6</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="viewport">
+    <div id="status-banner" class="status-banner" hidden></div>
+    <div id="graph-notice" class="graph-notice" hidden></div>
+    <div class="cy-controls">
+      <button id="zoom-in" class="cy-btn" aria-label="Zoom in" title="Zoom in">+</button>
+      <button id="zoom-out" class="cy-btn" aria-label="Zoom out" title="Zoom out">&minus;</button>
+      <button id="zoom-fit" class="cy-btn" aria-label="Fit to screen" title="Fit network to view">&#x2922;</button>
+    </div>
+    <div id="net-stats" class="net-stats" hidden></div>
+    <div id="cy" class="cy-container">
+      <div class="cy-placeholder">
+        <p>loading network data...</p>
+      </div>
+    </div>
+    <div id="legend" class="legend" hidden>
+      <div class="legend-title">Legend</div>
+      <div class="legend-row"><span class="dot dot-7tm"></span> 7TM (GPCR)</div>
+      <div class="legend-row"><span class="dot dot-nr"></span> Nuclear Receptor</div>
+      <div class="legend-row"><span class="dot dot-kinase"></span> Kinase</div>
+      <div class="legend-row"><span class="dot dot-compound"></span> Compound</div>
+      <div class="legend-row"><span class="edge-solid"></span> clean</div>
+      <div class="legend-row"><span class="edge-dashed"></span> viability flag</div>
+      <div class="legend-controls">
+        <label>
+          Layout:
+          <select id="layout-select">
+            <option value="spring">Spring (force-directed)</option>
+            <option value="circular">Circular</option>
+            <option value="concentric" selected>Concentric by potency</option>
+          </select>
+        </label>
+        <label>
+          pXC50 cutoff:
+          <input type="range" id="pxc50-slider" min="5" max="9" step="0.5" value="6">
+          <span id="pxc50-value">6.0</span>
+        </label>
+        <label>
+          Show:
+          <select id="topn-select">
+            <option value="0">all</option>
+            <option value="25">top 25</option>
+            <option value="50">top 50</option>
+            <option value="100">top 100</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </main>
+
+  <aside id="side-panel" class="side-panel empty">
+    <div id="side-content"></div>
+  </aside>
+
+  <footer class="bottombar">
+    <span>Data: <a href="https://huggingface.co/datasets/eve-bio/drug-target-activity" target="_blank" rel="noopener">eve-bio/drug-target-activity</a> CC-BY-NC-SA</span>
+    <span class="credit">
+      Co-developed by Pranavathiyani G
+      [<a href="https://linkedin.com/in/pranavathiyani" target="_blank" rel="noopener">LinkedIn</a>
+      &middot;
+      <a href="https://twitter.com/pranavathiyani" target="_blank" rel="noopener">Twitter</a>]
+      with Claude
+    </span>
+    <span id="footer-build"></span>
+  </footer>
+
+  <!-- Help modal -->
+  <div id="help-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close="1" aria-label="Close">&times;</button>
+      <h2>Using DAVI</h2>
+
+      <h3>What you're looking at</h3>
+      <p>
+        DAVI shows <strong>ego networks</strong> from the EvE Bio drug-target-activity dataset.
+        Each visualization centers on one compound or one target. Surrounding nodes are everything
+        it interacts with. Edge thickness = potency (pXC50). Edge color = clean (grey) vs. flagged
+        for viability concerns (dashed orange).
+      </p>
+
+      <h3>What pXC50 means</h3>
+      <p>
+        pXC50 is the negative log of the concentration at which 50% of maximum activity is reached
+        (i.e., pIC50 or pEC50, depending on assay mode). Higher = more potent. The data only
+        quantifies pXC50 in the range tested (10 pM to 10 &mu;M), so the minimum quantified
+        value is 5.0 and the maximum is around 11. Active compounds outside this range are
+        flagged but not quantified, and we call those <em>weak hits</em>.
+      </p>
+      <ul>
+        <li><strong>pXC50 &lt; 6</strong>: weak interaction, ~&mu;M range</li>
+        <li><strong>pXC50 6&ndash;7</strong>: moderate, sub-&mu;M to 100 nM</li>
+        <li><strong>pXC50 &gt; 8</strong>: strong, &lt;10 nM, pharmacologically meaningful</li>
+      </ul>
+
+      <h3>Flags to watch</h3>
+      <p>
+        <span class="flag-pill flag-viab">viab</span>
+        Compound caused &gt;15% cell viability loss in the corresponding viability assay.
+        Antagonist-mode 7TM hits with viab flags may be cell death masquerading as antagonism.
+      </p>
+      <p>
+        <span class="flag-pill flag-freq">freq</span>
+        Compound hit suspiciously often within a target class / mode (&gt;20 hits). May be a
+        promiscuous binder or assay-interference compound. Filter or interpret carefully.
+      </p>
+
+      <h3>Controls</h3>
+      <ul>
+        <li><strong>Search box</strong>: type any compound name, gene symbol, UniProt, DrugBank, or CAS. Arrow keys to navigate results, Enter to select.</li>
+        <li><strong>pXC50 cutoff</strong> slider: hides edges weaker than the threshold.</li>
+        <li><strong>Show top N</strong>: caps the visible network at N most-potent neighbors. Useful for hub targets.</li>
+        <li><strong>Click any node</strong>: re-centers the network on that compound or target.</li>
+        <li><strong>Drag a node</strong>: pulls it briefly, springs pull it back to equilibrium.</li>
+      </ul>
+
+      <h3>Target classes</h3>
+      <ul>
+        <li><span class="dot dot-7tm"></span> <strong>7TM</strong>: G-protein-coupled receptors (GPCRs). Cell-based assays, two modes (Agonist/Antagonist) and two signaling pathways (G-protein, &beta;-arrestin2).</li>
+        <li><span class="dot dot-nr"></span> <strong>NR</strong>: Nuclear receptors. Cell-free biochemical TR-FRET. Agonist + Antagonist.</li>
+        <li><span class="dot dot-kinase"></span> <strong>Kinase</strong>: Protein kinases. Cell-free competitive binding. Includes some clinically-important mutant variants.</li>
+      </ul>
+
+      <h3>Citing the data</h3>
+      <p>
+        Cite EvE Bio for the underlying screen:<br>
+        <em>EvE Bio, LLC (2026). drug-target-activity dataset, releases #1&ndash;#11. Hugging Face Datasets.
+        <a href="https://huggingface.co/datasets/eve-bio/drug-target-activity" target="_blank" rel="noopener">huggingface.co/datasets/eve-bio/drug-target-activity</a></em>
+      </p>
+      <p>
+        Data licensed under CC-BY-NC-SA. DAVI is an independent academic viewer.
+      </p>
+    </div>
+  </div>
+
+  <!-- Libraries from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.0/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/webcola@3.4.0/WebCola/cola.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cola@2.5.1/cytoscape-cola.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/minisearch@7.1.0/dist/umd/index.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
