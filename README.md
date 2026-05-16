@@ -94,7 +94,7 @@ If you use DAVI in published work, cite both the data and the tool:
 > EvE Bio, LLC (2026). drug-target-activity dataset. Hugging Face Datasets. https://huggingface.co/datasets/eve-bio/drug-target-activity. CC-BY-NC-SA 4.0.
 
 **Tool:**
-> Gnanasekar, P. (2026). DAVI: Drug-target Activity Viewer. https://github.com/pranavathiyani/davi
+> Pranavathiyani G. (2026). DAVI: Drug-target Activity Viewer. https://github.com/pranavathiyani/davi
 
 ## Licensing
 
