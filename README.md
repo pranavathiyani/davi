@@ -1,5 +1,5 @@
 # DAVI
-
+![DAVI screenshot](docs/DAVI.png)
 **Drug-target Activity Viewer**
 
 An interactive browser for the [EvE Bio drug-target-activity dataset](https://huggingface.co/datasets/eve-bio/drug-target-activity): a quantitative screen of 1,397 mostly-FDA-approved drugs against nuclear receptors, GPCRs, and protein kinases.
